@@ -1,2 +1,2 @@
 # 3rd-Year-Project
-Neural Network Powered Flashcard Generator
+Neural Network Powered Flashcard Generator.
