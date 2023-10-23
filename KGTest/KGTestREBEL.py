@@ -105,7 +105,7 @@ def from_small_text_to_kb(text, verbose=False):
     return kb
 
 
-text = "Disorder is a song by post punk band joy division, released in 1979. Joy division disbanded at the height of their popularity, and some members went on to form the new wave band new order."
+text = "Lucy lives in pooptown, USA"
 
 
 
