@@ -9,6 +9,7 @@ __pycache__/
 # dataset
 glove.6B.50d.txt 
 IMDB Dataset.csv
+trainFile.txt
 
 # Distribution / packaging
 .Python
