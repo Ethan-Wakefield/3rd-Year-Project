@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# dataset
+glove.6B.50d.txt 
+IMDB Dataset.csv
+
 # Distribution / packaging
 .Python
 build/
