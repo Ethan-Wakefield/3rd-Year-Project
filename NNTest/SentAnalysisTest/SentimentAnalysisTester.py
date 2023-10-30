@@ -13,24 +13,16 @@ from keras.layers import Embedding, LSTM, Flatten, Dense
 with open('NNTest/SentAnalysisTest/tokenizer.pkl', 'rb') as tokenizer_file:
     tokenizer = pickle.load(tokenizer_file)
 
-loaded_model = tf.keras.models.load_model("NNTest/SentAnalysisTest/model.keras", compile = False)
-sentence = "This film was very interesting."
+loaded_model = tf.keras.models.load_model("NNTest/SentAnalysisTest/model.keras", compile = True)
+sentence = ["sloppy sloppy performance! The story was sloppy! The acting was sloppy!"]
 instance = tokenizer.texts_to_sequences(sentence)
 
-flat_list = []
-
-for sublist in instance :
-    for item in sublist :
-        flat_list.append(item)
-        
-flat_list = [flat_list]
-print(flat_list)
-
-flat_list = pad_sequences(flat_list, padding = 'post', maxlen = 100)
+instance = pad_sequences(instance, padding = 'post', maxlen = 100)
 
 
-
-if loaded_model.predict(flat_list) > 0.5 :
+val = loaded_model.predict(instance)
+print(val)
+if val > 0.5 :
     
     print("POSITIVE")
     

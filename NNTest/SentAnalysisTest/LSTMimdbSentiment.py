@@ -95,7 +95,7 @@ for word, index in tokenizer.word_index.items():
 model = Sequential([
     Embedding(vocab_size, 50,  weights=[embedding_matrix], input_length=max_len, trainable=False),
     LSTM(128),
-    Dense(1, activation = 'sigmoid')
+    Dense(2, activation = 'sigmoid')
 ])
 
 model.compile(loss = 'binary_crossentropy', optimizer = 'adam', metrics = ['accuracy'])

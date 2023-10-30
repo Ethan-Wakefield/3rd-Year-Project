@@ -10,6 +10,7 @@ __pycache__/
 glove.6B.50d.txt 
 IMDB Dataset.csv
 trainFile.txt
+model.tar.gz
 
 # Distribution / packaging
 .Python
