@@ -119,9 +119,12 @@ rel_ext = spacy.load("en_core_web_sm", disable=['ner', 'lemmatizer', 'attribute_
 rel_ext.add_pipe("rebel", config={'device':DEVICE, 'model_name':'Babelscape/rebel-large'})
 
 #Test
-input_text = "The plague disease, caused by Yersinia pestis, is enzootic (commonly present) in populations of fleas carried by ground rodents, including marmots, in various areas including Central Asia, Kurdistan, Western Asia, Northern India and Uganda. Nestorian graves dating to 1338-39 near Lake Issyk Kul in Kyrgyzstan have inscriptions referring to plague and are thought by many epidemiologists to mark the outbreak of the epidemic, from which it could easily have spread to China and India. In October 2010, medical geneticists suggested that all three of the great waves of the plague originated in China. In China, the 13th century Mongol conquest caused a decline in farming and trading. However, economic recovery had been observed at the beginning of the 14th century. In the 1330s a large number of natural disasters and plagues led to widespread famine, starting in 1331, with a deadly plague arriving soon after. Epidemics that may have included plague killed an estimated 25 million Chinese and other Asians during the 15 years before it reached Constantinople in 1347."
 
-coref_text = coref(input_text)._.resolved_text
+#split into independent clauses for more triples
+input_text = "The secondary level includes schools offering years 7 through 12 (year twelve is known as lower sixth) and year 13 (upper sixth). This category includes university-preparatory schools or 'prep schools', boarding schools and day schools. Tuition at private secondary schools varies from school to school and depends on many factors, including the location of the school, the willingness of parents to pay, peer tuitions and the school's financial endowment. High tuition, schools claim, is used to pay higher salaries for the best teachers and also used to provide enriched learning environments, including a low student to teacher ratio, small class sizes and services, such as libraries, science laboratories and computers. Some private schools are boarding schools and many military academies are privately owned or operated as well."
+input_text2 = "hitesh is german. he attends the warwick university. He studies computer science."
+
+coref_text = coref(input_text2)._.resolved_text
 print(coref_text)
 doc = rel_ext(coref_text)
 
