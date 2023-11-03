@@ -11,6 +11,7 @@ glove.6B.50d.txt
 IMDB Dataset.csv
 trainFile.txt
 model.tar.gz
+dev-v2.0.json
 
 # Distribution / packaging
 .Python
