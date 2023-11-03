@@ -12,6 +12,8 @@ IMDB Dataset.csv
 trainFile.txt
 model.tar.gz
 dev-v2.0.json
+adjlist.txt
+corefedsquad.txt
 
 # Distribution / packaging
 .Python
