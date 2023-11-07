@@ -1,5 +1,7 @@
 import spacy
+import json
 
+import crosslingual_coreference
 import requests
 import re
 import hashlib
@@ -109,20 +111,75 @@ class DiGraph():
 
 
 DEVICE = -1 # Number of the GPU, -1 if want to use CPU
+f = open('C:/3rdYearProject/3rd-Year-Project/NN/dataset/SQuAD-v1.1.json')
+# returns JSON object as 
+# a dictionary
+data = json.load(f)
 
+#Define coreference resolution
+coref = spacy.load("en_core_web_sm", disable=['ner', 'tagger', 'parser', 'attribute_ruler', 'lemmatizer'])
+coref.add_pipe("xx_coref", config={"chunk_size": 2500, "chunk_overlap": 2, "device": -1})
 
 # Define rel extraction model
 rel_ext = spacy.load("en_core_web_sm", disable=['ner', 'lemmatizer', 'attribute_rules', 'tagger'])
 rel_ext.add_pipe("rebel", config={'device':DEVICE, 'model_name':'Babelscape/rebel-large'})
 
-f = open("corefedsquad.txt", "r", encoding="utf-8")
-fwrite = open("adjlist.txt", "w", encoding="utf-8")
-for line in f:
-    doc = rel_ext(line)
-    graph = DiGraph()
-    for value, rel_dict in doc._.rel.items():
-        print(f"{value}: {rel_dict}")
-        graph.addRelation(rel_dict)
-    
-    fwrite.write(str(graph.adjList.items()))
-    fwrite.write("\n")
+cnt = 0
+dictionary = dict()
+
+for i in data['data']:
+    #Subject to removal
+    dictionary[i['title']] = []
+    for j in i['paragraphs']:
+        cnt = cnt+1
+        if cnt > 50:
+            break
+        #Resolve coreferences
+        context = coref(j['context'])._.resolved_text
+
+        #Extract triples from coreferenced text
+        doc = rel_ext(context)
+        rel_List = []
+        # Also create list of node labels
+        nodes = []
+        for value, rel_dict in doc._.rel.items():
+            rel_List.append(rel_dict) 
+            nodes.append(rel_dict['head'])
+            nodes.append(rel_dict['tail'])
+        print(rel_List)
+        print("\n")
+        print(nodes)
+        print("\n")
+        print("\n")
+        
+        #Create corresponding Q and A lists containing questionswho's answer can be found in the KB
+        answers = []
+        questions = []
+        for qa in j['qas']:
+            ans_list = qa['answers']
+            if len(ans_list) == 0:
+                    continue
+            for ans in ans_list:
+                if ans['text'] in nodes:
+                    answers.append(ans['text'])
+                    questions.append(qa['question'])
+                    break
+
+        #Add JSON context, Qs and As as JSON under title field
+        toAppend = [rel_List, questions, answers]
+        dictionary[i['title']].append(toAppend)
+        print(questions)
+        print(answers)
+        print("\n")
+        print(rel_List)
+        print("\n")
+        print("\n")
+    break
+
+#Write JSON object to file
+with open('C:/3rdYearProject/3rd-Year-Project/NN/dataset/CQA.json', "w") as outfile:
+    json.dump(dictionary, outfile)
+
+
+
+

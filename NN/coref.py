@@ -21,7 +21,7 @@ fwrite = open("corefedsquad.txt", "w", encoding="utf-8")
 cnt = 0
 
 for i in data['data']:
-    if i['title'] == "Yuan_dynasty":
+    if i['title'] == "Normans":
         for j in i['paragraphs']:
             to_write = coref(j['context'])._.resolved_text
             fwrite.write(to_write)
