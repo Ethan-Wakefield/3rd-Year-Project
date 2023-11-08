@@ -15,7 +15,8 @@ dev-v2.0.json
 adjlist.txt
 corefedsquad.txt
 SQuAD-v1.1.json
-CQA.json
+Level1CQA.json
+Level3CQA.json
 
 # Distribution / packaging
 .Python

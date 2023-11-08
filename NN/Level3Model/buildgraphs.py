@@ -177,7 +177,7 @@ for i in data['data']:
     break
 
 #Write JSON object to file
-with open('C:/3rdYearProject/3rd-Year-Project/NN/dataset/CQA.json', "w") as outfile:
+with open('C:/3rdYearProject/3rd-Year-Project/NN/dataset/Level3CQA.json', "w") as outfile:
     json.dump(dictionary, outfile)
 
 
