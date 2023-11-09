@@ -26,7 +26,7 @@ cnt = 0
 for i in data['data']:
     for j in i['paragraphs']:
         cnt = cnt+1
-        if cnt > 1:
+        if cnt > 20:
             break
         context = j['context']
         sentences = nltk.sent_tokenize(context)
