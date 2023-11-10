@@ -17,6 +17,8 @@ corefedsquad.txt
 SQuAD-v1.1.json
 Level1CQA.json
 Level3CQA.json
+model.keras
+tokenizer.pkl
 
 # Distribution / packaging
 .Python

@@ -9,7 +9,9 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences       # 'pad_sequences' for having same dimmension for each sequence.
 from keras.layers import Embedding, LSTM, Flatten, Dense  
 
+#===========================================================================================================================================================
 #Form graph out of RDF triples developed by the model
+#===========================================================================================================================================================
 class di_graph():
     def __init__(self):
         self.adjList = defaultdict(list)
@@ -22,6 +24,9 @@ class di_graph():
         sink = rel_dict['tail']
         self.adjList[source].append((relation, sink))
         
+#===========================================================================================================================================================
+#Break edges into nodes to form Levi graph
+#===========================================================================================================================================================
 class levi_graph():
     def __init__(self):
         self.adjList = defaultdict(list)
