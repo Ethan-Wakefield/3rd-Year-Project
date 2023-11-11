@@ -13,6 +13,7 @@ data = json.load(f)
 def normalize_text(text):
     sentence = text.lower()
     sentence = sentence.replace("\u2013", "-")
+    sentence = sentence.replace("?", '')
     sentence = re.sub(r'\s+', ' ', sentence)
     return sentence
 

@@ -19,6 +19,8 @@ Level1CQA.json
 Level3CQA.json
 model.keras
 tokenizer.pkl
+sent_tokenizer.pkl
+quest_tokenizer.pkl
 
 # Distribution / packaging
 .Python
