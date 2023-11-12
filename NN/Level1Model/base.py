@@ -143,11 +143,13 @@ es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=2)
 history = model.fit(
     [train_sent, train_quest[:, :-1]],
     train_quest.reshape(train_quest.shape[0], train_quest.shape[1], 1)[:, 1:],
-    epochs=2,
+    epochs=1,
     callbacks=[es],
-    batch_size=64,
+    batch_size=32,
     validation_data=([test_sent, test_quest[:, :-1]],
                      test_quest.reshape(test_quest.shape[0], test_quest.shape[1], 1)[:
                      , 1:]),
     verbose=1
     )
+
+model.save("C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/model.keras")
