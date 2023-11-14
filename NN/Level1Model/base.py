@@ -24,19 +24,22 @@ data = json.load(f)
 #===========================================================================================================================================================
 sentences = data['sentences']
 questions = data['questions']
-#sent_tokenizer = Tokenizer()
-#quest_tokenizer = Tokenizer()
+sent_tokenizer = Tokenizer()
+quest_tokenizer = Tokenizer()
 
 sentences = np.array(sentences)
 questions = np.array(questions)
-questions = ['_START_ '+ str(line) + ' _END_' for line in questions]
+questions = ['sostok '+ str(line) + ' endtok' for line in questions]
+
 both = pd.DataFrame({'sent': sentences,'quest': questions})
+print(both.head())
 
 
 with open('C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/sent_tokenizer.pkl', 'rb') as tokenizer1_file:
     sent_tokenizer = pickle.load(tokenizer1_file)
 with open('C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
     quest_tokenizer = pickle.load(tokenizer2_file)
+
 
 train_sent, test_sent, train_quest, test_quest = train_test_split(
     np.array(both["sent"]),
@@ -68,6 +71,10 @@ vocab_size = len(sent_tokenizer.word_index) + 1
 questvocab_size = len(quest_tokenizer.word_index) + 1
 print(vocab_size)
 print(questvocab_size)
+
+print("First 10 items of target_word_index:")
+for key, value in list(quest_tokenizer.word_index.items())[:10]:
+    print(f"{key}: {value}")
 
 '''
 with open('C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/sent_tokenizer.pkl', 'wb') as tokenizer1_file:
@@ -145,7 +152,7 @@ history = model.fit(
     train_quest.reshape(train_quest.shape[0], train_quest.shape[1], 1)[:, 1:],
     epochs=1,
     callbacks=[es],
-    batch_size=32,
+    batch_size=2,
     validation_data=([test_sent, test_quest[:, :-1]],
                      test_quest.reshape(test_quest.shape[0], test_quest.shape[1], 1)[:
                      , 1:]),
