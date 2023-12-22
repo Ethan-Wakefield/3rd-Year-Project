@@ -14,7 +14,8 @@ with open('NNTest/SentAnalysisTest/tokenizer.pkl', 'rb') as tokenizer_file:
     tokenizer = pickle.load(tokenizer_file)
 
 loaded_model = tf.keras.models.load_model("NNTest/SentAnalysisTest/model.keras", compile = True)
-sentence = ["sloppy sloppy performance! The story was sloppy! The acting was sloppy!"]
+sentence = ["I found a goblin in the woods and he spat rotten gross terrible chunks at me."]
+print(sentence)
 instance = tokenizer.texts_to_sequences(sentence)
 
 instance = pad_sequences(instance, padding = 'post', maxlen = 100)
