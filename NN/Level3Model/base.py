@@ -37,7 +37,7 @@ data = json.load(f)
 
 #         return out
 
-def my_graph(edge_list):
+def levi_graph(edge_list):
     nodes = set()
     for triple in edge_list:
         nodes.add(triple["head"])
@@ -51,12 +51,20 @@ def my_graph(edge_list):
     num_nodes = len(nodes)
     adjacency_matrix = dok_matrix((num_nodes, num_nodes), dtype=np.int8)
 
+    node_features = []
+    for node, i in node_to_index.items():
+        node_features.append([i, node])
+    
+    edge_features_dict = dict()
+
     # Populate the adjacency matrix
     num_edges = len(edge_list)
     for triple in edge_list:
         head_index = node_to_index[triple["head"]]
         tail_index = node_to_index[triple["tail"]]
         adjacency_matrix[head_index, tail_index] = 1
+        edge_features_dict[(head_index, tail_index)] = triple["relation"]
+
 
     #Convert to Levi graph
     incrementer = num_nodes
@@ -64,26 +72,23 @@ def my_graph(edge_list):
     for i in range(0, num_nodes):
         for j in range(0, num_nodes):
             if adjacency_matrix[i,j] == 1:
+                #Todo get the edge labels
                 levi_adjacency_matrix[i,incrementer] = 1
                 levi_adjacency_matrix[incrementer,j] = 1
                 incrementer = incrementer + 1
-
+                node_features.append([incrementer, edge_features_dict.get((i,j))])
+                
 
     # Convert to a compressed sparse row (CSR) matrix
-    print("OG")
-    adjacency_matrix_csr = adjacency_matrix.tocsr()
-    print(adjacency_matrix_csr)
-    print("\n")
-    print("LEVI")
     levi_adjacency_matrix_csr = levi_adjacency_matrix.tocsr()
-    print(levi_adjacency_matrix_csr)
-    return adjacency_matrix_csr
+    print(node_features)
+    return levi_adjacency_matrix_csr
 
 
 first = data["Super_Bowl_50"]
 for item in first:
     kg = item[0]
-    graph = spektral.data.Graph(a=my_graph(kg))
+    graph = spektral.data.Graph(a=levi_graph(kg))
     #print(graph.n_nodes)
     #print(graph.n_edges)
 
