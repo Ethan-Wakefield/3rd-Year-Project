@@ -14,16 +14,16 @@ from keras.callbacks import EarlyStopping
 from keras.utils import plot_model
 
 
-model = tf.keras.models.load_model("C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/model.keras", compile = True)
+model = tf.keras.models.load_model("/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/model.keras", compile = True)
 
 index = None
 
 
 
 
-with open('C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/sent_tokenizer.pkl', 'rb') as tokenizer1_file:
+with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/sent_tokenizer.pkl', 'rb') as tokenizer1_file:
     sent_tokenizer = pickle.load(tokenizer1_file)
-with open('C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
+with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
     quest_tokenizer = pickle.load(tokenizer2_file)
 
 reverse_target_word_index = quest_tokenizer.index_word
@@ -112,7 +112,7 @@ def seq2text(input_seq):
 
     return newString
 
-f = open('C:/3rdYearProject/3rd-Year-Project/NN/dataset/Level1CQA.json')
+f = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/dataset/Level1CQA.json')
 data = json.load(f)
 sentences = data['sentences']
 sentences = np.array(sentences)

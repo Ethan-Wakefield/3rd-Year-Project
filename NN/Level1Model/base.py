@@ -15,7 +15,7 @@ from keras.callbacks import EarlyStopping
 #===========================================================================================================================================================
 #Load Level1CQA into a python dictionary
 #===========================================================================================================================================================
-f = open('C:/3rdYearProject/3rd-Year-Project/NN/dataset/Level1CQA.json')
+f = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/dataset/Level1CQA.json')
 data = json.load(f)
 
 
@@ -35,9 +35,9 @@ both = pd.DataFrame({'sent': sentences,'quest': questions})
 print(both.head())
 
 
-with open('C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/sent_tokenizer.pkl', 'rb') as tokenizer1_file:
+with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/sent_tokenizer.pkl', 'rb') as tokenizer1_file:
     sent_tokenizer = pickle.load(tokenizer1_file)
-with open('C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
+with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
     quest_tokenizer = pickle.load(tokenizer2_file)
 
 
@@ -87,7 +87,7 @@ with open('C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/quest_tokenizer.pkl
 #Establish glove embeddings
 #===========================================================================================================================================================
 embeddings_dictionary = dict()
-glove_file = open('C:/3rdYearProject/3rd-Year-Project/NNTest/SentAnalysisTest/glove/glove.6B.50d.txt', encoding="utf8")
+glove_file = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NNTest/SentAnalysisTest/glove.6B.50d.txt', encoding="utf8")
 
 for line in glove_file:
     records = line.split()
@@ -144,7 +144,7 @@ model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=2)
 
 #Save model
-#model.save("C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/model.keras")
+model.save("/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/model.keras")
 
 
 history = model.fit(
@@ -152,11 +152,11 @@ history = model.fit(
     train_quest.reshape(train_quest.shape[0], train_quest.shape[1], 1)[:, 1:],
     epochs=1,
     callbacks=[es],
-    batch_size=2,
+    batch_size=4,
     validation_data=([test_sent, test_quest[:, :-1]],
                      test_quest.reshape(test_quest.shape[0], test_quest.shape[1], 1)[:
                      , 1:]),
     verbose=1
     )
 
-model.save("C:/3rdYearProject/3rd-Year-Project/NN/Level1Model/model.keras")
+model.save("/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/model.keras")

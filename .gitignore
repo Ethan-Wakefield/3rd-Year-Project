@@ -21,6 +21,7 @@ model.keras
 tokenizer.pkl
 sent_tokenizer.pkl
 quest_tokenizer.pkl
+.DS_Store
 
 # Distribution / packaging
 .Python

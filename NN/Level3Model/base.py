@@ -12,12 +12,13 @@ from keras.preprocessing.sequence import pad_sequences       # 'pad_sequences' f
 from keras.layers import Embedding, LSTM, Flatten, Dense , Dropout 
 import spektral
 from spektral.layers import GCNConv, GlobalSumPool
+from spektral.data import Dataset
 from keras.models import Model
 
 #If we have a finite number of relstions, we can one hot encode them. 
 #OR (bi)LSTM the nodes & edges to get our fixed size vector representation a-la Subgraph... paper.
 
-f = open('C:/3rdYearProject/3rd-Year-Project/NN/dataset/Level3CQA.json')
+f = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/dataset/Level3CQA.json')
 data = json.load(f)
 
 # class MyFirstGNN(Model):
@@ -37,58 +38,93 @@ data = json.load(f)
 
 #         return out
 
-def levi_graph(edge_list):
-    nodes = set()
-    for triple in edge_list:
-        nodes.add(triple["head"])
-        nodes.add(triple["tail"])
-        
-
-    # Create a mapping from nodes to indices
-    node_to_index = {node: i for i, node in enumerate(nodes)}
-
-    # Initialize a sparse matrix
-    num_nodes = len(nodes)
-    adjacency_matrix = dok_matrix((num_nodes, num_nodes), dtype=np.int8)
-
-    node_features = []
-    for node, i in node_to_index.items():
-        node_features.append([i, node])
+class MyDataset(Dataset):
     
-    edge_features_dict = dict()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    # Populate the adjacency matrix
-    num_edges = len(edge_list)
-    for triple in edge_list:
-        head_index = node_to_index[triple["head"]]
-        tail_index = node_to_index[triple["tail"]]
-        adjacency_matrix[head_index, tail_index] = 1
-        edge_features_dict[(head_index, tail_index)] = triple["relation"]
-
-
-    #Convert to Levi graph
-    incrementer = num_nodes
-    levi_adjacency_matrix = dok_matrix((num_nodes + num_edges, num_nodes + num_edges), dtype=np.int8)
-    for i in range(0, num_nodes):
-        for j in range(0, num_nodes):
-            if adjacency_matrix[i,j] == 1:
-                #Todo get the edge labels
-                levi_adjacency_matrix[i,incrementer] = 1
-                levi_adjacency_matrix[incrementer,j] = 1
-                incrementer = incrementer + 1
-                node_features.append([incrementer, edge_features_dict.get((i,j))])
-                
-
-    # Convert to a compressed sparse row (CSR) matrix
-    levi_adjacency_matrix_csr = levi_adjacency_matrix.tocsr()
-    print(node_features)
-    return levi_adjacency_matrix_csr
+    def read(self):
+        output = []
+        f = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/dataset/Level3CQA.json')
+        data = json.load(f)
+        first = data["Super_Bowl_50"]
+        for item in first:
+            kg = item[0]
+            a, node_features = self.levi_graph(kg)
+            node_feature_vectors = self.feature_to_vector(node_features)
+            output.append(spektral.data.Graph(a=a))
+        return output
 
 
+
+    def levi_graph(self, edge_list):
+        nodes = set()
+        for triple in edge_list:
+            nodes.add(triple["head"])
+            nodes.add(triple["tail"])
+            
+
+        # Create a mapping from nodes to indices
+        node_to_index = {node: i for i, node in enumerate(nodes)}
+
+        # Initialize a sparse matrix
+        num_nodes = len(nodes)
+        adjacency_matrix = dok_matrix((num_nodes, num_nodes), dtype=np.int8)
+
+        node_features = []
+        for node, i in node_to_index.items():
+            node_features.append([i, node])
+        
+        edge_features_dict = dict()
+
+        # Populate the adjacency matrix
+        num_edges = len(edge_list)
+        for triple in edge_list:
+            head_index = node_to_index[triple["head"]]
+            tail_index = node_to_index[triple["tail"]]
+            adjacency_matrix[head_index, tail_index] = 1
+            edge_features_dict[(head_index, tail_index)] = triple["relation"]
+
+
+        #Convert to Levi graph
+        incrementer = num_nodes
+        levi_adjacency_matrix = dok_matrix((num_nodes + num_edges, num_nodes + num_edges), dtype=np.int8)
+        for i in range(0, num_nodes):
+            for j in range(0, num_nodes):
+                if adjacency_matrix[i,j] == 1:
+                    #Todo get the edge labels
+                    levi_adjacency_matrix[i,incrementer] = 1
+                    levi_adjacency_matrix[incrementer,j] = 1
+                    node_features.append([incrementer, edge_features_dict.get((i,j))])
+                    incrementer = incrementer + 1
+                    
+
+        # Convert to a compressed sparse row (CSR) matrix
+        levi_adjacency_matrix_csr = levi_adjacency_matrix.tocsr()
+        print("\n")
+        print(edge_list)
+        print("\n")
+        print(node_features)
+        print("\n")
+        print(levi_adjacency_matrix_csr)
+        print("\n")
+        print("====================")
+        return levi_adjacency_matrix_csr, node_features
+    
+    def feature_to_vector(self, node_features):
+        pass
+
+    
+
+
+dataset = MyDataset()
+print(dataset[-1])
+
+'''
 first = data["Super_Bowl_50"]
 for item in first:
     kg = item[0]
     graph = spektral.data.Graph(a=levi_graph(kg))
     #print(graph.n_nodes)
     #print(graph.n_edges)
-
+'''
