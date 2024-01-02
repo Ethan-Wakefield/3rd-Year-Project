@@ -11,38 +11,52 @@ from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences       # 'pad_sequences' for having same dimmension for each sequence.
 from keras.layers import Embedding, LSTM, Flatten, Dense , Dropout 
 import spektral
-from spektral.layers import GCNConv, GlobalSumPool
+from spektral.layers import GCNConv, GlobalSumPool, GatedGraphConv
 from spektral.data import Dataset
 from keras.models import Model
 
 #If we have a finite number of relstions, we can one hot encode them. 
 #OR (bi)LSTM the nodes & edges to get our fixed size vector representation a-la Subgraph... paper.
 
+
+#===========================================================================================================================================================
+#Establish glove embeddings and word tokenization
+#===========================================================================================================================================================
 f = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/dataset/Level3CQA.json')
 data = json.load(f)
 
-# class MyFirstGNN(Model):
+with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/sent_tokenizer.pkl', 'rb') as tokenizer1_file:
+    sent_tokenizer = pickle.load(tokenizer1_file)
+with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
+    quest_tokenizer = pickle.load(tokenizer2_file)
 
-#     def __init__(self, n_hidden, n_labels):
-#         super().__init__()
-#         self.graph_conv = GCNConv(n_hidden)
-#         self.pool = GlobalSumPool()
-#         self.dropout = Dropout(0.5)
-#         self.dense = Dense(n_labels, 'softmax')
+vocab_size = len(sent_tokenizer.word_index) + 1
 
-#     def call(self, inputs):
-#         out = self.graph_conv(inputs)
-#         out = self.dropout(out)
-#         out = self.pool(out)
-#         out = self.dense(out)
+glove_file = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NNTest/SentAnalysisTest/glove.6B.50d.txt', encoding="utf8")
+embeddings_dictionary = dict()
+for line in glove_file:
+            records = line.split()
+            word = records[0]
+            vector_dimensions = np.asarray(records[1:], dtype='float32')
+            embeddings_dictionary[word] = vector_dimensions
+glove_file.close()
 
-#         return out
+embedding_matrix = np.zeros((vocab_size, 50))
+for word, index in sent_tokenizer.word_index.items():
+    embedding_vector = embeddings_dictionary.get(word)
+    if embedding_vector is not None:
+        embedding_matrix[index] = embedding_vector
 
+
+
+#===========================================================================================================================================================
+#Spektral Dataset 
+#===========================================================================================================================================================
 class MyDataset(Dataset):
-    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+    #Necessary override method to generate the dataset
     def read(self):
         output = []
         f = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/dataset/Level3CQA.json')
@@ -51,18 +65,16 @@ class MyDataset(Dataset):
         for item in first:
             kg = item[0]
             a, node_features = self.levi_graph(kg)
-            node_feature_vectors = self.feature_to_vector(node_features)
-            output.append(spektral.data.Graph(a=a))
+            node_feature_vectors = self.features_to_vectors(node_features)
+            output.append(spektral.data.Graph(a=a, x=node_feature_vectors))
         return output
 
-
-
+    #Create Levi graphs from existing edge labelled graphs
     def levi_graph(self, edge_list):
         nodes = set()
         for triple in edge_list:
             nodes.add(triple["head"])
             nodes.add(triple["tail"])
-            
 
         # Create a mapping from nodes to indices
         node_to_index = {node: i for i, node in enumerate(nodes)}
@@ -70,11 +82,9 @@ class MyDataset(Dataset):
         # Initialize a sparse matrix
         num_nodes = len(nodes)
         adjacency_matrix = dok_matrix((num_nodes, num_nodes), dtype=np.int8)
-
         node_features = []
         for node, i in node_to_index.items():
             node_features.append([i, node])
-        
         edge_features_dict = dict()
 
         # Populate the adjacency matrix
@@ -84,7 +94,6 @@ class MyDataset(Dataset):
             tail_index = node_to_index[triple["tail"]]
             adjacency_matrix[head_index, tail_index] = 1
             edge_features_dict[(head_index, tail_index)] = triple["relation"]
-
 
         #Convert to Levi graph
         incrementer = num_nodes
@@ -96,8 +105,7 @@ class MyDataset(Dataset):
                     levi_adjacency_matrix[i,incrementer] = 1
                     levi_adjacency_matrix[incrementer,j] = 1
                     node_features.append([incrementer, edge_features_dict.get((i,j))])
-                    incrementer = incrementer + 1
-                    
+                    incrementer = incrementer + 1         
 
         # Convert to a compressed sparse row (CSR) matrix
         levi_adjacency_matrix_csr = levi_adjacency_matrix.tocsr()
@@ -111,20 +119,40 @@ class MyDataset(Dataset):
         print("====================")
         return levi_adjacency_matrix_csr, node_features
     
-    def feature_to_vector(self, node_features):
-        pass
+    def features_to_vectors(self, node_features):
+        embedding_size = 50
+        averaged_embeddings = []
+
+        for node in node_features:
+            feature_words = node[1].split()
+            node_embedding = np.zeros(embedding_size)
+            valid_words_count = 0
+            for word in feature_words:
+                embedding_vector = embeddings_dictionary.get(word)
+                if embedding_vector is not None:
+                    node_embedding += embedding_vector
+                    valid_words_count += 1
+            if valid_words_count > 0:
+                node_embedding /= valid_words_count
+
+            averaged_embeddings.append(node_embedding)
+
+        averaged_embeddings = np.array(averaged_embeddings)
+        return averaged_embeddings
 
     
-
-
 dataset = MyDataset()
 print(dataset[-1])
 
-'''
-first = data["Super_Bowl_50"]
-for item in first:
-    kg = item[0]
-    graph = spektral.data.Graph(a=levi_graph(kg))
-    #print(graph.n_nodes)
-    #print(graph.n_edges)
-'''
+
+#===========================================================================================================================================================
+#Define Encoder
+#===========================================================================================================================================================
+class EncoderGGNN(Model):
+    def __init__(self, n_hidden, n_layers):
+        super().__init__()
+        self.gated_graph_conv = GatedGraphConv(n_hidden)
+        
+    def call(self, inputs):
+        out = self.gated_graph_conv(inputs)
+        return out
