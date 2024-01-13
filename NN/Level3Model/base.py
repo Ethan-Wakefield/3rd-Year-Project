@@ -9,10 +9,10 @@ from keras.models import Sequential                # 'Sequential' model will be 
 from sklearn.model_selection import train_test_split          # 'train_test_split' for splitting the data into train and test data. 
 from keras.preprocessing.text import Tokenizer       
 from keras.preprocessing.sequence import pad_sequences       # 'pad_sequences' for having same dimmension for each sequence.
-from keras.layers import Embedding, LSTM, Flatten, Dense , Dropout 
+from keras.layers import Embedding, LSTM, Flatten, Dense , Dropout, GRU, TimeDistributed
 import spektral
-from spektral.layers import GCNConv, GlobalSumPool, GatedGraphConv
-from spektral.data import Dataset
+from spektral.layers import GCNConv, GlobalSumPool, GatedGraphConv, GlobalMaxPool
+from spektral.data import Dataset, DisjointLoader
 from keras.models import Model
 
 #If we have a finite number of relstions, we can one hot encode them. 
@@ -30,7 +30,8 @@ with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Le
 with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level1Model/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
     quest_tokenizer = pickle.load(tokenizer2_file)
 
-vocab_size = len(sent_tokenizer.word_index) + 1
+vocab_input_size = len(sent_tokenizer.word_index) + 1
+vocab_target_size = len(quest_tokenizer.word_index) + 1
 
 glove_file = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NNTest/SentAnalysisTest/glove.6B.50d.txt', encoding="utf8")
 embeddings_dictionary = dict()
@@ -41,7 +42,7 @@ for line in glove_file:
             embeddings_dictionary[word] = vector_dimensions
 glove_file.close()
 
-embedding_matrix = np.zeros((vocab_size, 50))
+embedding_matrix = np.zeros((vocab_input_size, 50))
 for word, index in sent_tokenizer.word_index.items():
     embedding_vector = embeddings_dictionary.get(word)
     if embedding_vector is not None:
@@ -148,11 +149,56 @@ print(dataset[-1])
 #===========================================================================================================================================================
 #Define Encoder
 #===========================================================================================================================================================
-class EncoderGGNN(Model):
-    def __init__(self, n_hidden, n_layers):
+class Encoder_GGNN(Model):
+    def __init__(self, n_layers):
         super().__init__()
-        self.gated_graph_conv = GatedGraphConv(n_hidden)
+        self.gated_graph_conv = GatedGraphConv(channels=50, n_layers=n_layers, name='encoder', )
         
     def call(self, inputs):
         out = self.gated_graph_conv(inputs)
         return out
+    
+#===========================================================================================================================================================
+#Define Decoder
+#===========================================================================================================================================================
+class Decoder(Model):
+    def __init__(self):
+        super().__init__()
+        self.decoder = GRU(50, return_sequences=True, return_state=True)
+        self.decoder_dense = TimeDistributed(Dense(vocab_target_size, activation='softmax'))
+    
+    def call(self, input, hidden_state):
+        out, hidden_state = self.decoder(input, initial_state=hidden_state)
+        out = self.decoder_dense(out)
+        return out, hidden_state
+    
+#===========================================================================================================================================================
+#Define Model
+#===========================================================================================================================================================
+class ModelGGNN(Model):
+    def __init__(self, n_layers):
+        super().__init__()
+        self.encoder = Encoder_GGNN(n_layers)
+        self.max_pool = GlobalMaxPool()
+        #Decoder here, GRU for now but will be LSTM
+        self.decoder = GRU()
+        
+    def call(self, inputs):
+        intermediate_representation= self.encoder(inputs)
+        intermediate_representation = self.max_pool(out)
+        out = self.decoder(intermediate_representation)
+        return out
+    
+#===========================================================================================================================================================
+#Set up training
+#===========================================================================================================================================================
+
+loader = DisjointLoader(dataset, batch_size=1)
+batch = loader.__next__()
+print(batch)
+# inputs, target = batch
+x, a, i = batch
+print("X")
+print(x)
+print("A")
+print(a)
