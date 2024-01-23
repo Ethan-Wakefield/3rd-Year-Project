@@ -123,15 +123,13 @@ class Encoder_GGNN(Model):
 #Define Decoder
 #===========================================================================================================================================================
 class Decoder(Model):
-    def __init__(self, units, emb_dimension, vocab_input_size, vocab_target_size, embedding_matrix):
+    def __init__(self, units, emb_dimension, vocab_target_size, embedding_matrix):
         super(Decoder, self).__init__()
         self.units = units
         self.gru = GRU(units, return_sequences=True, return_state=True)
-        self.decoder_dense = TimeDistributed(Dense(self.vocab_target_size, activation='softmax')) 
-        self.decoder_embedding = Embedding(vocab_input_size, emb_dimension,  weights=[embedding_matrix], trainable=False)
-        self.vocab_target_size = vocab_target_size
+        self.decoder_dense = TimeDistributed(Dense(vocab_target_size, activation='softmax')) 
+        self.decoder_embedding = Embedding(vocab_target_size, emb_dimension,  weights=[embedding_matrix], trainable=False)
 
-    
     def call(self, input, decoder_hidden_state):
         input = self.decoder_embedding(input)
         (output, state) = self.gru(input, initial_state=decoder_hidden_state)
@@ -159,12 +157,11 @@ class Loss():
 #Define Model
 #===========================================================================================================================================================
 class Model_GGNN(Model):
-    def __init__(self, n_layers, vocab_target_size, loader):
+    def __init__(self, n_layers, units, vocab_target_size, emb_dimension, embedding_matrix):
         super().__init__()
         self.encoder = Encoder_GGNN(n_layers)
         self.max_pool = GlobalMaxPool()
-        self.decoder = Decoder()
-        self.vocab_target_size = vocab_target_size
+        self.decoder = Decoder(units, emb_dimension, vocab_target_size, embedding_matrix)
         
     def call(self, inputs):
         intermediate_representation= self.encoder(inputs)

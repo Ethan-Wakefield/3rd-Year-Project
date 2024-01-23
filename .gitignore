@@ -22,6 +22,7 @@ tokenizer.pkl
 sent_tokenizer.pkl
 quest_tokenizer.pkl
 .DS_Store
+matrix/
 
 # Distribution / packaging
 .Python

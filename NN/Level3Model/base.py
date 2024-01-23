@@ -16,8 +16,39 @@ from spektral.data import Dataset, DisjointLoader
 from keras.models import Model
 from full_model import My_Dataset, Encoder_GGNN, Decoder, Model_GGNN, Loss
 
-#If we have a finite number of relstions, we can one hot encode them. 
-#OR (bi)LSTM the nodes & edges to get our fixed size vector representation a-la Subgraph... paper.
+
+def summon_matrix(mode, vocab_input_size):
+    #Calculate and save the embedding matrix and dictionary
+    if mode == "save":
+        glove_file = open('NN/glove/glove.6B.50d.txt', encoding="utf8")
+        embeddings_dictionary = dict()
+        for line in glove_file:
+                    records = line.split()
+                    word = records[0]
+                    vector_dimensions = np.asarray(records[1:], dtype='float32')
+                    embeddings_dictionary[word] = vector_dimensions
+        glove_file.close()
+
+        embedding_matrix = np.zeros((vocab_input_size, 50))
+        for word, index in sent_tokenizer.word_index.items():
+            embedding_vector = embeddings_dictionary.get(word)
+            if embedding_vector is not None:
+                embedding_matrix[index] = embedding_vector
+
+        with open('NN/Level3Model/matrix/embedding_matrix', 'wb') as embedding_matrix_file:
+            pickle.dump(embedding_matrix, embedding_matrix_file)
+        with open('NN/Level3Model/matrix/embeddings_dictionary', 'wb') as embeddings_dictionary_file:
+            pickle.dump(embeddings_dictionary, embeddings_dictionary_file)
+        
+        return embedding_matrix, embeddings_dictionary
+    
+    #Load the embedding matrix and dictionary
+    else:
+        with open('NN/Level3Model/matrix/embedding_matrix', 'rb') as embedding_matrix_file:
+            embedding_matrix = pickle.load(embedding_matrix_file)
+        with open('NN/Level3Model/matrix/embeddings_dictionary', 'rb') as embeddings_dictionary_file:
+            embeddings_dictionary = pickle.load(embeddings_dictionary_file)
+        return embedding_matrix, embeddings_dictionary
 
 #===========================================================================================================================================================
 #Prepare Data
@@ -34,24 +65,10 @@ with open('NN/tokenizers/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
 vocab_input_size = len(sent_tokenizer.word_index) + 1
 vocab_target_size = len(quest_tokenizer.word_index) + 1
 
-glove_file = open('NN/glove/glove.6B.50d.txt', encoding="utf8")
-embeddings_dictionary = dict()
-for line in glove_file:
-            records = line.split()
-            word = records[0]
-            vector_dimensions = np.asarray(records[1:], dtype='float32')
-            embeddings_dictionary[word] = vector_dimensions
-glove_file.close()
-
-embedding_matrix = np.zeros((vocab_input_size, 50))
-for word, index in sent_tokenizer.word_index.items():
-    embedding_vector = embeddings_dictionary.get(word)
-    if embedding_vector is not None:
-        embedding_matrix[index] = embedding_vector
-
+embedding_matrix, embeddings_dictionary = summon_matrix("save", vocab_input_size)
 dataset = My_Dataset(embeddings_dictionary)
-
 loader = DisjointLoader(dataset, batch_size=1)
+
 batch = loader.__next__()
 # inputs, target = batch
 x, a, i = batch
@@ -63,21 +80,22 @@ print(a)
 #===========================================================================================================================================================
 #Build Model
 #===========================================================================================================================================================
+units = 256
+embedding_dimension = 50
+layers = 3
 
-encoder = Encoder_GGNN(50, 50)
-decoder = Decoder(50, 50)
-model = Model_GGNN(encoder, decoder)
+model = Model_GGNN(layers, units, vocab_target_size, embedding_dimension, embedding_matrix)
 optimizer = tf.keras.optimizers.legacy.Adam()
+
 #===========================================================================================================================================================
 #Train Model
 #===========================================================================================================================================================
+# loss_object = Loss()
 
-loss_object = Loss()
-
-@tf.function(input_signature=loader.tf_signature())  # Specify signature here
-def train_step(inputs, target):
-    with tf.GradientTape() as tape:
-        prediction = model(inputs)
-        loss = loss_object.loss_function(target, prediction)
-        gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+# @tf.function(input_signature=loader.tf_signature())  # Specify signature here
+# def train_step(inputs, target):
+#     with tf.GradientTape() as tape:
+#         prediction = model(inputs)
+#         loss = loss_object.loss_function(target, prediction)
+#         gradients = tape.gradient(loss, model.trainable_variables)
+#         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
