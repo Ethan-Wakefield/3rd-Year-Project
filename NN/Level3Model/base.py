@@ -16,6 +16,10 @@ from spektral.data import Dataset, DisjointLoader
 from keras.models import Model
 from full_model import My_Dataset, Encoder_GGNN, Decoder, Model_GGNN, Loss
 
+#TODO
+#1. The Spektral message passing layer requires edge features of rank 2 - weird becuase GGNN doesn't require edge features at all
+#    - So create a blank edge feature matrix of shape (num_edges, 1) and, when creating the graphs in the spektral dataset, 
+#      pass in the edge feature matrix as well
 
 def summon_matrix(mode, vocab_input_size):
     #Calculate and save the embedding matrix and dictionary
@@ -66,16 +70,23 @@ vocab_input_size = len(sent_tokenizer.word_index) + 1
 vocab_target_size = len(quest_tokenizer.word_index) + 1
 
 embedding_matrix, embeddings_dictionary = summon_matrix("save", vocab_input_size)
-dataset = My_Dataset(embeddings_dictionary)
-loader = DisjointLoader(dataset, batch_size=1)
+dataset = My_Dataset(embeddings_dictionary, quest_tokenizer)
+loader = DisjointLoader(dataset, batch_size=1, epochs=1, node_level=False)
 
-batch = loader.__next__()
+# print(dataset.n_graphs)
+# print(dataset[13].a)
+# print(dataset[13].x)
+# print(dataset[13].e)
+# print(dataset[13].y)
+# print("=====================================================================================================")
+# print(dataset[13])
+     
 # inputs, target = batch
-x, a, i = batch
-print("X")
-print(x)
-print("A")
-print(a)
+# x, a, i = batch
+# print("X")
+# print(x)
+# print("A")
+# print(a)
 
 #===========================================================================================================================================================
 #Build Model
@@ -84,18 +95,48 @@ units = 256
 embedding_dimension = 50
 layers = 3
 
+encoder = Encoder_GGNN(layers)
 model = Model_GGNN(layers, units, vocab_target_size, embedding_dimension, embedding_matrix)
 optimizer = tf.keras.optimizers.legacy.Adam()
 
 #===========================================================================================================================================================
 #Train Model
 #===========================================================================================================================================================
-# loss_object = Loss()
+loss_object = Loss()
 
-# @tf.function(input_signature=loader.tf_signature())  # Specify signature here
-# def train_step(inputs, target):
-#     with tf.GradientTape() as tape:
-#         prediction = model(inputs)
-#         loss = loss_object.loss_function(target, prediction)
-#         gradients = tape.gradient(loss, model.trainable_variables)
-#         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+#@tf.function(input_signature=loader.tf_signature()) 
+def train_step(inputs, target):
+    with tf.GradientTape() as tape:
+        prediction = model(inputs)
+        loss = loss_object.loss_function(target, prediction)
+        gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+cnt = 1
+for batch in loader:
+    A, B = batch
+    A = A[:-1]
+    B = B[0][0]
+    print(len(A))
+    print(A[0])
+    print("-----------------------------------")
+    print(A[1])
+    print("-----------------------------------")
+    
+    # Need to pad the decoder input questions, and also the target questions. Just get stuff given to the decoder (B here) in a good form
+    # For decoder input do question except last token, for target to question except first token 
+    # model_output = model(A, B)
+    # print(model_output)
+
+    if cnt == 1:
+        break
+    # print("INPUTS")
+    # print(inputs)
+    # print("TARGET")
+    # print(target)
+    # print("BLEH")
+    # print(bleh)
+    # print("LABEL")
+    # print(label)
+    # print(batch)
+    print("=====================================================================================================")

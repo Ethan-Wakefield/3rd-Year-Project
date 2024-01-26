@@ -19,8 +19,9 @@ from keras.models import Model
 #Dataset Class
 #===========================================================================================================================================================
 class My_Dataset(Dataset):
-    def __init__(self, embeddings_dictionary, **kwargs):
+    def __init__(self, embeddings_dictionary, quest_tokenizer, **kwargs):
         self.embeddings_dictionary = embeddings_dictionary
+        self.quest_tokenizer = quest_tokenizer
         super().__init__(**kwargs)
 
     #Necessary override method to generate the dataset
@@ -31,10 +32,26 @@ class My_Dataset(Dataset):
         first = data["Super_Bowl_50"]
         for item in first:
             kg = item[0]
+            questions = item[1]
+            if (len(questions) == 0):
+                continue
+
+            question = questions[0]
+            question = self.clean(question)
+            question = self.quest_tokenizer.texts_to_sequences([question])
+            question = pad_sequences(question,  maxlen=50, padding='post')[0]
+
             a, node_features = self.levi_graph(kg)
             node_feature_vectors = self.features_to_vectors(node_features)
-            output.append(spektral.data.Graph(a=a, x=node_feature_vectors))
+            output.append(spektral.data.Graph(a=a, x=node_feature_vectors, y=question))
         return output
+    
+    def clean(self, text):
+        sentence = text.lower()
+        sentence = sentence.replace("\u2013", "-")
+        sentence = sentence.replace("?", '')
+        sentence = re.sub(r'\s+', ' ', sentence)
+        return sentence
 
     #Create Levi graphs from existing edge labelled graphs
     def levi_graph(self, edge_list):
@@ -76,14 +93,14 @@ class My_Dataset(Dataset):
 
         #Convert to a compressed sparse row (CSR) matrix
         levi_adjacency_matrix_csr = levi_adjacency_matrix.tocsr()
-        print("\n")
-        print(edge_list)
-        print("\n")
-        print(node_features)
-        print("\n")
-        print(levi_adjacency_matrix_csr)
-        print("\n")
-        print("====================")
+        # print("\n")
+        # print(edge_list)
+        # print("\n")
+        # print(node_features)
+        # print("\n")
+        # print(levi_adjacency_matrix_csr)
+        # print("\n")
+        # print("====================")
         return levi_adjacency_matrix_csr, node_features
     
     def features_to_vectors(self, node_features):
@@ -113,9 +130,11 @@ class My_Dataset(Dataset):
 class Encoder_GGNN(Model):
     def __init__(self, n_layers):
         super().__init__()
-        self.gated_graph_conv = GatedGraphConv(channels=50, n_layers=n_layers, name='encoder', )
+        self.gated_graph_conv = GatedGraphConv(channels=50, n_layers=n_layers, name='encoder')
         
     def call(self, inputs):
+        print(inputs)
+        # print(len(inputs))
         out = self.gated_graph_conv(inputs)
         return out
 
@@ -163,10 +182,10 @@ class Model_GGNN(Model):
         self.max_pool = GlobalMaxPool()
         self.decoder = Decoder(units, emb_dimension, vocab_target_size, embedding_matrix)
         
-    def call(self, inputs):
-        intermediate_representation= self.encoder(inputs)
+    def call(self, encoder_input, decoder_input):
+        intermediate_representation= self.encoder(encoder_input)
         intermediate_representation = self.max_pool(out)
-        out = self.decoder(intermediate_representation)
+        out, _ = self.decoder(decoder_input, intermediate_representation)
         return out
     
     
