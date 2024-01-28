@@ -73,7 +73,7 @@ embedding_matrix, embeddings_dictionary = summon_matrix("save", vocab_input_size
 dataset = My_Dataset(embeddings_dictionary, quest_tokenizer)
 loader = DisjointLoader(dataset, batch_size=1, epochs=1, node_level=False)
 
-# print(dataset.n_graphs)
+print(dataset.n_graphs)
 # print(dataset[13].a)
 # print(dataset[13].x)
 # print(dataset[13].e)
@@ -91,45 +91,43 @@ loader = DisjointLoader(dataset, batch_size=1, epochs=1, node_level=False)
 #===========================================================================================================================================================
 #Build Model
 #===========================================================================================================================================================
-units = 256
+units = 50
 embedding_dimension = 50
 layers = 3
 
 encoder = Encoder_GGNN(layers)
-model = Model_GGNN(layers, units, vocab_target_size, embedding_dimension, embedding_matrix)
 optimizer = tf.keras.optimizers.legacy.Adam()
+model = Model_GGNN(layers, units, vocab_input_size, vocab_target_size, optimizer, embedding_dimension, embedding_matrix)
+
 
 #===========================================================================================================================================================
 #Train Model
 #===========================================================================================================================================================
 loss_object = Loss()
 
-#@tf.function(input_signature=loader.tf_signature()) 
-def train_step(inputs, target):
-    with tf.GradientTape() as tape:
-        prediction = model(inputs)
-        loss = loss_object.loss_function(target, prediction)
-        gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-
 cnt = 1
 for batch in loader:
     A, B = batch
     A = A[:-1]
-    B = B[0][0]
-    print(len(A))
-    print(A[0])
-    print("-----------------------------------")
-    print(A[1])
-    print("-----------------------------------")
-    
+    # print(len(A))
+    # print(A[0])
+    # print("-----------------------------------")
+    # print(A[1])
+    # print("-----------------------------------")
+    # print(B)
+    encoder_input = A
+    decoder_input = B[:, :-1]
+    decoder_target = B[:, 1:]
     # Need to pad the decoder input questions, and also the target questions. Just get stuff given to the decoder (B here) in a good form
     # For decoder input do question except last token, for target to question except first token 
-    # model_output = model(A, B)
-    # print(model_output)
+    model_loss, model_output = model.train_step(encoder_input, decoder_input, decoder_target, loss_object)
+    print(model_loss)
+    
 
-    if cnt == 1:
-        break
+    # train_step((encoder_input, decoder_input), decoder_target)
+    print(cnt)
+    cnt += 1
+    
     # print("INPUTS")
     # print(inputs)
     # print("TARGET")
@@ -139,4 +137,4 @@ for batch in loader:
     # print("LABEL")
     # print(label)
     # print(batch)
-    print("=====================================================================================================")
+    # print("=====================================================================================================")
