@@ -71,7 +71,7 @@ vocab_target_size = len(quest_tokenizer.word_index) + 1
 
 embedding_matrix, embeddings_dictionary = summon_matrix("save", vocab_input_size)
 dataset = My_Dataset(embeddings_dictionary, quest_tokenizer)
-loader = DisjointLoader(dataset, batch_size=1, epochs=1, node_level=False)
+loader = DisjointLoader(dataset, batch_size=1, epochs=5, node_level=False)
 
 print(dataset.n_graphs)
 # print(dataset[13].a)
@@ -106,6 +106,7 @@ model = Model_GGNN(layers, units, vocab_input_size, vocab_target_size, optimizer
 loss_object = Loss()
 
 cnt = 1
+
 for batch in loader:
     A, B = batch
     A = A[:-1]
@@ -125,7 +126,7 @@ for batch in loader:
     
 
     # train_step((encoder_input, decoder_input), decoder_target)
-    print(cnt)
+    # print(cnt)
     cnt += 1
     
     # print("INPUTS")

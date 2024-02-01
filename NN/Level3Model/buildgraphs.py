@@ -16,6 +16,12 @@ from transformers import pipeline
 from transformers import logging
 logging.set_verbosity_error()
 
+def clean(self, text):
+        sentence = text.lower()
+        sentence = sentence.replace("\u2013", "-")
+        sentence = sentence.replace("?", '')
+        sentence = re.sub(r'\s+', ' ', sentence)
+        return sentence
 
 #Take output from REBEL model and parse it, to create a list of dictionaries with fields "head", "type" (relation) and "tail". 
 def extract_triplets(text):
@@ -111,7 +117,7 @@ class DiGraph():
 
 
 DEVICE = -1 # Number of the GPU, -1 if want to use CPU
-f = open('C:/3rdYearProject/3rd-Year-Project/NN/dataset/SQuAD-v1.1.json')
+f = open('NN/dataset/SQuAD-v1.1.json')
 # returns JSON object as 
 # a dictionary
 data = json.load(f)
@@ -129,11 +135,10 @@ dictionary = dict()
 
 for i in data['data']:
     #Subject to removal
-    dictionary[i['title']] = []
+    dictionary = []
     for j in i['paragraphs']:
         cnt = cnt+1
-        if cnt > 50:
-            break
+        
         #Resolve coreferences
         context = coref(j['context'])._.resolved_text
 
@@ -146,11 +151,7 @@ for i in data['data']:
             rel_List.append(rel_dict) 
             nodes.append(rel_dict['head'])
             nodes.append(rel_dict['tail'])
-        print(rel_List)
-        print("\n")
-        print(nodes)
-        print("\n")
-        print("\n")
+       
         
         #Create corresponding Q and A lists containing questionswho's answer can be found in the KB
         answers = []
@@ -167,18 +168,23 @@ for i in data['data']:
 
         #Add JSON context, Qs and As as JSON under title field
         toAppend = [rel_List, questions, answers]
-        dictionary[i['title']].append(toAppend)
+        dictionary.append(toAppend)
+        print(cnt)
+        print("\n")
         print(questions)
+        print("\n")
         print(answers)
         print("\n")
         print(rel_List)
         print("\n")
         print("\n")
-    break
+        print("===============================================")
+        #Write JSON object to file
+    with open(f'NN/dataset/Level3CQA-{i["title"]}.json', "w") as outfile:
+        json.dump(dictionary, outfile)
+    
 
-#Write JSON object to file
-with open('C:/3rdYearProject/3rd-Year-Project/NN/dataset/Level3CQA.json', "w") as outfile:
-    json.dump(dictionary, outfile)
+
 
 
 

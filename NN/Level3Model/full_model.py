@@ -30,21 +30,25 @@ class My_Dataset(Dataset):
         f = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/dataset/Level3CQA.json')
         data = json.load(f)
         first = data["Super_Bowl_50"]
+        #Need to change this - for every question, get it's corresponding answer. Highlight that node's vector. Set target to question + answer
         for item in first:
             kg = item[0]
             questions = item[1]
             if (len(questions) == 0):
                 continue
-
-            question = questions[0]
-            question = self.clean(question)
-            question = 'sostok ' + question + ' endtok'
-            question = self.quest_tokenizer.texts_to_sequences([question])
-            question = pad_sequences(question,  maxlen=20, padding='post')[0]
-
             a, node_features = self.levi_graph(kg)
             node_feature_vectors = self.features_to_vectors(node_features)
-            output.append(spektral.data.Graph(a=a, x=node_feature_vectors, y=question))
+
+            answers = item[2]
+            for question in questions:
+                question = self.clean(question)
+                question = 'sostok ' + question + ' endtok'
+                question = self.quest_tokenizer.texts_to_sequences([question])
+                question = pad_sequences(question,  maxlen=20, padding='post')[0]
+
+                
+                output.append(spektral.data.Graph(a=a, x=node_feature_vectors, y=question))
+        f.close()
         return output
     
     def clean(self, text):
@@ -109,7 +113,8 @@ class My_Dataset(Dataset):
         averaged_embeddings = []
 
         for node in node_features:
-            feature_words = node[1].split()
+            sent = self.clean(node[1])
+            feature_words = sent.split()
             node_embedding = np.zeros(embedding_size)
             valid_words_count = 0
             for word in feature_words:
@@ -188,7 +193,6 @@ class Model_GGNN(Model):
         pass
     
     def train_step(self, encoder_input, decoder_input, target, loss_object):
-        
         with tf.GradientTape() as tape:
             intermediate_representation= self.encoder(encoder_input)
             intermediate_representation = self.max_pool(intermediate_representation)

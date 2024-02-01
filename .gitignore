@@ -23,6 +23,8 @@ sent_tokenizer.pkl
 quest_tokenizer.pkl
 .DS_Store
 matrix/
+sevenenv/
+NN/dataset
 
 # Distribution / packaging
 .Python
