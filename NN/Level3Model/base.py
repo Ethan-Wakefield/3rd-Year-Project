@@ -17,23 +17,24 @@ from keras.models import Model
 from full_model import My_Dataset, Encoder_GGNN, Decoder, Model_GGNN, Loss
 
 #TODO
-#1. The Spektral message passing layer requires edge features of rank 2 - weird becuase GGNN doesn't require edge features at all
-#    - So create a blank edge feature matrix of shape (num_edges, 1) and, when creating the graphs in the spektral dataset, 
-#      pass in the edge feature matrix as well
+#GRAPH the LOSS
 
 def summon_matrix(mode, vocab_input_size):
     #Calculate and save the embedding matrix and dictionary
     if mode == "save":
-        glove_file = open('NN/glove/glove.6B.50d.txt', encoding="utf8")
+        glove_file = open('NN/glove/glove.840B.300d.txt', encoding="utf8")
         embeddings_dictionary = dict()
         for line in glove_file:
+            try:
                     records = line.split()
                     word = records[0]
                     vector_dimensions = np.asarray(records[1:], dtype='float32')
                     embeddings_dictionary[word] = vector_dimensions
+            except (ValueError, IndexError):
+                continue
         glove_file.close()
 
-        embedding_matrix = np.zeros((vocab_input_size, 50))
+        embedding_matrix = np.zeros((vocab_input_size, 300))
         for word, index in sent_tokenizer.word_index.items():
             embedding_vector = embeddings_dictionary.get(word)
             if embedding_vector is not None:
@@ -69,16 +70,16 @@ with open('NN/tokenizers/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
 vocab_input_size = len(sent_tokenizer.word_index) + 1
 vocab_target_size = len(quest_tokenizer.word_index) + 1
 
-embedding_matrix, embeddings_dictionary = summon_matrix("load", vocab_input_size)
+embedding_matrix, embeddings_dictionary = summon_matrix("save", vocab_input_size)
 dataset = My_Dataset(embeddings_dictionary, quest_tokenizer)
-loader = DisjointLoader(dataset, batch_size=1, epochs=10, node_level=False)
+loader = DisjointLoader(dataset, batch_size=1, epochs=1, node_level=False)
 
 print(dataset.n_graphs)
-# print(dataset[13].a)
-# print(dataset[13].x)
+print(dataset[13].a)
+print(dataset[13].x)
 # print(dataset[13].e)
-# print(dataset[13].y)
-# print("=====================================================================================================")
+print(dataset[13].y)
+print("=====================================================================================================")
 # print(dataset[13])
      
 # inputs, target = batch
@@ -91,8 +92,8 @@ print(dataset.n_graphs)
 #===========================================================================================================================================================
 #Build Model
 #===========================================================================================================================================================
-units = 70
-embedding_dimension = 50
+units = 600
+embedding_dimension = 300
 layers = 3
 
 encoder = Encoder_GGNN(layers)
@@ -119,10 +120,12 @@ for batch in loader:
     encoder_input = A
     decoder_input = B[:, :-1]
     decoder_target = B[:, 1:]
+    print(decoder_target)
     # Need to pad the decoder input questions, and also the target questions. Just get stuff given to the decoder (B here) in a good form
     # For decoder input do question except last token, for target to question except first token 
     model_loss, model_output = model.train_step(encoder_input, decoder_input, decoder_target, loss_object)
     print(model_loss)
+    print("=====================================================================================================")
     
 
     # train_step((encoder_input, decoder_input), decoder_target)

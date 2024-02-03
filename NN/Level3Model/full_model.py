@@ -119,9 +119,8 @@ class My_Dataset(Dataset):
         return levi_adjacency_matrix_csr, node_features
     
     def features_to_vectors(self, node_features, answer):
-        embedding_size = 50
+        embedding_size = 600
         averaged_embeddings = []
-
 
         for node in node_features:
             highlight = False
@@ -134,13 +133,20 @@ class My_Dataset(Dataset):
             node_embedding = np.zeros(embedding_size)
             valid_words_count = 0
 
-            for word in feature_words:
+            for i, word in enumerate(feature_words):
                 embedding_vector = self.embeddings_dictionary.get(word)
                 if embedding_vector is not None:
-                    node_embedding += embedding_vector
+                    node_embedding[:300] += embedding_vector[:300]  # First 50 dimensions
                     valid_words_count += 1
+
             if valid_words_count > 0:
-                node_embedding /= valid_words_count
+                node_embedding[:300] /= valid_words_count
+
+            # Set the last 50 dimensions
+            if highlight:
+                node_embedding[300:] = node_embedding[:300]
+            else:
+                node_embedding[300:] = 0
 
             averaged_embeddings.append(node_embedding)
 
@@ -153,7 +159,7 @@ class My_Dataset(Dataset):
 class Encoder_GGNN(Model):
     def __init__(self, n_layers):
         super().__init__()
-        self.gated_graph_conv = GatedGraphConv(channels=70, n_layers=n_layers, name='encoder')
+        self.gated_graph_conv = GatedGraphConv(channels=600, n_layers=n_layers, name='encoder')
         
     def call(self, inputs):
         out = self.gated_graph_conv(inputs)

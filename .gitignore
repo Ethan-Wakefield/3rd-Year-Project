@@ -26,6 +26,7 @@ matrix/
 sevenenv/
 NN/dataset
 NN/dataset2
+glove/
 
 # Distribution / packaging
 .Python
