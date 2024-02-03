@@ -69,9 +69,9 @@ with open('NN/tokenizers/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
 vocab_input_size = len(sent_tokenizer.word_index) + 1
 vocab_target_size = len(quest_tokenizer.word_index) + 1
 
-embedding_matrix, embeddings_dictionary = summon_matrix("save", vocab_input_size)
+embedding_matrix, embeddings_dictionary = summon_matrix("load", vocab_input_size)
 dataset = My_Dataset(embeddings_dictionary, quest_tokenizer)
-loader = DisjointLoader(dataset, batch_size=1, epochs=5, node_level=False)
+loader = DisjointLoader(dataset, batch_size=1, epochs=10, node_level=False)
 
 print(dataset.n_graphs)
 # print(dataset[13].a)
@@ -91,7 +91,7 @@ print(dataset.n_graphs)
 #===========================================================================================================================================================
 #Build Model
 #===========================================================================================================================================================
-units = 50
+units = 70
 embedding_dimension = 50
 layers = 3
 

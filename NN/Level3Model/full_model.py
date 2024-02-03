@@ -14,7 +14,9 @@ import spektral
 from spektral.layers import GCNConv, GlobalSumPool, GatedGraphConv, GlobalMaxPool
 from spektral.data import Dataset, DisjointLoader
 from keras.models import Model
+import os
 
+folder_path = '/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/dataset2'
 #===========================================================================================================================================================
 #Dataset Class
 #===========================================================================================================================================================
@@ -26,27 +28,35 @@ class My_Dataset(Dataset):
 
     #Necessary override method to generate the dataset
     def read(self):
+        all_output = []
+        for filename in os.listdir(folder_path):
+            if filename.endswith(".json"):
+                file_path = os.path.join(folder_path, filename)
+                output = self.read_one(file_path)
+                all_output.extend(output)
+        return all_output
+
+    
+    def read_one(self, file_path):
         output = []
-        f = open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/dataset/Level3CQA.json')
+        f = open(file_path)
         data = json.load(f)
-        first = data["Super_Bowl_50"]
         #Need to change this - for every question, get it's corresponding answer. Highlight that node's vector. Set target to question + answer
-        for item in first:
+        for item in data:
             kg = item[0]
             questions = item[1]
             if (len(questions) == 0):
                 continue
             a, node_features = self.levi_graph(kg)
-            node_feature_vectors = self.features_to_vectors(node_features)
-
             answers = item[2]
-            for question in questions:
+            for i in range(len(questions)):
+                question = questions[i]
+                answer = answers[i]
                 question = self.clean(question)
                 question = 'sostok ' + question + ' endtok'
                 question = self.quest_tokenizer.texts_to_sequences([question])
                 question = pad_sequences(question,  maxlen=20, padding='post')[0]
-
-                
+                node_feature_vectors = self.features_to_vectors(node_features, answer)
                 output.append(spektral.data.Graph(a=a, x=node_feature_vectors, y=question))
         f.close()
         return output
@@ -108,15 +118,22 @@ class My_Dataset(Dataset):
         # print("====================")
         return levi_adjacency_matrix_csr, node_features
     
-    def features_to_vectors(self, node_features):
+    def features_to_vectors(self, node_features, answer):
         embedding_size = 50
         averaged_embeddings = []
 
+
         for node in node_features:
-            sent = self.clean(node[1])
+            highlight = False
+            sent = node[1]
+            if sent == answer:
+                highlight = True
+
+            sent = self.clean(sent)
             feature_words = sent.split()
             node_embedding = np.zeros(embedding_size)
             valid_words_count = 0
+
             for word in feature_words:
                 embedding_vector = self.embeddings_dictionary.get(word)
                 if embedding_vector is not None:
@@ -136,7 +153,7 @@ class My_Dataset(Dataset):
 class Encoder_GGNN(Model):
     def __init__(self, n_layers):
         super().__init__()
-        self.gated_graph_conv = GatedGraphConv(channels=50, n_layers=n_layers, name='encoder')
+        self.gated_graph_conv = GatedGraphConv(channels=70, n_layers=n_layers, name='encoder')
         
     def call(self, inputs):
         out = self.gated_graph_conv(inputs)

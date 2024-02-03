@@ -25,6 +25,7 @@ quest_tokenizer.pkl
 matrix/
 sevenenv/
 NN/dataset
+NN/dataset2
 
 # Distribution / packaging
 .Python
