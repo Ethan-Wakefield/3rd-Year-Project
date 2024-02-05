@@ -212,10 +212,35 @@ class Model_GGNN(Model):
         self.decoder = Decoder(units, emb_dimension, vocab_input_size, vocab_target_size, embedding_matrix)
         self.optimizer = optimizer
         self.quest_tokenizer = quest_tokenizer
+        self.reverse_target_word_index = quest_tokenizer.index_word
 
-    def call(self, encoder_input, decoder_input):
+
+    def call(self, graph_input):
+        intermediate_representation = self.encoder(graph_input)
+        intermediate_representation = self.max_pool(intermediate_representation)
+        decoder_input = tf.expand_dims([self.quest_tokenizer.word_index['sostok']], 1)
+        state = intermediate_representation
+        output = ''
+
+        for i in range(30):
+            prediction, state = self.decoder(decoder_input, state)
+            predicted_token = tf.argmax(prediction[0])
+            current_word = self.reverse_target_word_index[predicted_token.numpy()]
+            if current_word == 'endtok':
+                return output
+            
+            output = output + current_word + ' '
+            decoder_input = tf.expand_dims([predicted_token], 0)
+
+
+    def inference_pre_graph(self):
+        pass
+
+
+    def inference_post_graph(self, graph_input):
         pass
     
+
     def train_step(self, encoder_input, target, loss_object):
         with tf.GradientTape() as tape:
             intermediate_representation= self.encoder(encoder_input)

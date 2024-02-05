@@ -15,71 +15,19 @@ from spektral.layers import GCNConv, GlobalSumPool, GatedGraphConv, GlobalMaxPoo
 from spektral.data import Dataset, DisjointLoader
 from keras.models import Model
 from full_model import My_Dataset, Encoder_GGNN, Decoder, Model_GGNN, Loss
+from load_data import train_loader as loader
+from load_data import vocab_input_size, vocab_target_size, quest_tokenizer, embedding_matrix
 
 #TODO
 #GRAPH the LOSS
 
-def summon_matrix(mode, vocab_input_size):
-    #Calculate and save the embedding matrix and dictionary
-    if mode == "save":
-        glove_file = open('NN/glove/glove.840B.300d.txt', encoding="utf8")
-        embeddings_dictionary = dict()
-        for line in glove_file:
-            try:
-                    records = line.split()
-                    word = records[0]
-                    vector_dimensions = np.asarray(records[1:], dtype='float32')
-                    embeddings_dictionary[word] = vector_dimensions
-            except (ValueError, IndexError):
-                continue
-        glove_file.close()
 
-        embedding_matrix = np.zeros((vocab_input_size, 300))
-        for word, index in sent_tokenizer.word_index.items():
-            embedding_vector = embeddings_dictionary.get(word)
-            if embedding_vector is not None:
-                embedding_matrix[index] = embedding_vector
-
-        with open('NN/Level3Model/matrix/embedding_matrix', 'wb') as embedding_matrix_file:
-            pickle.dump(embedding_matrix, embedding_matrix_file)
-        with open('NN/Level3Model/matrix/embeddings_dictionary', 'wb') as embeddings_dictionary_file:
-            pickle.dump(embeddings_dictionary, embeddings_dictionary_file)
-        
-        return embedding_matrix, embeddings_dictionary
-    
-    #Load the embedding matrix and dictionary
-    else:
-        with open('NN/Level3Model/matrix/embedding_matrix', 'rb') as embedding_matrix_file:
-            embedding_matrix = pickle.load(embedding_matrix_file)
-        with open('NN/Level3Model/matrix/embeddings_dictionary', 'rb') as embeddings_dictionary_file:
-            embeddings_dictionary = pickle.load(embeddings_dictionary_file)
-        return embedding_matrix, embeddings_dictionary
-
-#===========================================================================================================================================================
-#Prepare Data
-#===========================================================================================================================================================
-
-f = open('NN/dataset/Level3CQA.json')
-data = json.load(f)
-
-with open('NN/tokenizers/sent_tokenizer.pkl', 'rb') as tokenizer1_file:
-    sent_tokenizer = pickle.load(tokenizer1_file)
-with open('NN/tokenizers/quest_tokenizer.pkl', 'rb') as tokenizer2_file:
-    quest_tokenizer = pickle.load(tokenizer2_file)
-
-vocab_input_size = len(sent_tokenizer.word_index) + 1
-vocab_target_size = len(quest_tokenizer.word_index) + 1
-
-embedding_matrix, embeddings_dictionary = summon_matrix("save", vocab_input_size)
-dataset = My_Dataset(embeddings_dictionary, quest_tokenizer)
-loader = DisjointLoader(dataset, batch_size=1, epochs=6, node_level=False)
-
-print(dataset.n_graphs)
-print(dataset[13].a)
-print(dataset[13].x)
-# print(dataset[13].e)
-print(dataset[13].y)
-print("=====================================================================================================")
+# print(dataset.n_graphs)
+# print(dataset[13].a)
+# print(dataset[13].x)
+# # print(dataset[13].e)
+# print(dataset[13].y)
+# print("=====================================================================================================")
 # print(dataset[13])
      
 # inputs, target = batch
@@ -145,4 +93,4 @@ for batch in loader:
     # print(batch)
     # print("=====================================================================================================")
 
-model.save_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/6epochs')
+model.save_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/3epochs')
