@@ -21,7 +21,6 @@ from load_data import vocab_input_size, vocab_target_size, quest_tokenizer, embe
 #TODO
 #GRAPH the LOSS
 
-
 # print(dataset.n_graphs)
 # print(dataset[13].a)
 # print(dataset[13].x)
@@ -54,43 +53,10 @@ model = Model_GGNN(layers, units, vocab_input_size, vocab_target_size, optimizer
 #===========================================================================================================================================================
 loss_object = Loss()
 
-cnt = 1
-
-for batch in loader:
-    A, B = batch
-    A = A[:-1]
-    # print(len(A))
-    # print(A[0])
-    # print("-----------------------------------")
-    # print(A[1])
-    # print("-----------------------------------")
-    # print(B)
-    encoder_input = A
-    # decoder_input = B[:, :-1]
-    # print(decoder_input)
-    # decoder_target = B[:, 1:]
-    decoder_target = B
-    # Need to pad the decoder input questions, and also the target questions. Just get stuff given to the decoder (B here) in a good form
-    # For decoder input do question except last token, for target to question except first token 
-    model_loss, model_output = model.train_step(encoder_input, decoder_target, loss_object)
-
-    print(f"Iter: {cnt}   ", model_loss)
-    # print("=====================================================================================================")
-    
-
-    # train_step((encoder_input, decoder_input), decoder_target)
-    # print(cnt)
-    cnt += 1
-    
-    # print("INPUTS")
-    # print(inputs)
-    # print("TARGET")
-    # print(target)
-    # print("BLEH")
-    # print(bleh)
-    # print("LABEL")
-    # print(label)
-    # print(batch)
-    # print("=====================================================================================================")
-
-model.save_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/3epochs')
+batch = loader.__next__()
+A, B = batch
+A = A[:-1]
+output = model(A)
+model.load_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/9epochs/9epochs').expect_partial()
+model.train(loader, loss_object)
+model.save_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/12epochs/12epochs')

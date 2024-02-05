@@ -29,7 +29,7 @@ batch = loader.__next__()
 A, B = batch
 A = A[:-1]
 output = model(A)
-model.load_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/3epochs/3epochs').expect_partial()
+model.load_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/12epochs/12epochs').expect_partial()
 
 cnt = 0
 for batch in loader:
@@ -42,6 +42,7 @@ for batch in loader:
     print("TARGET:::::", B_words)
     cnt = cnt+1
     output = model(A)
-    print(output)
-    if cnt == 10:
+    print("PREDICTED:::::", output)
+    print("=====================================================================================================")
+    if cnt == 20:
         break

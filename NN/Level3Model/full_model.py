@@ -260,7 +260,56 @@ class Model_GGNN(Model):
             loss = (loss / int(len(target[0])))
             return loss, prediction
     
-    def train(self):
-        pass
-    
-    
+    def train(self, loader, loss_object):
+                
+        cnt = 1
+        total_loss = 0
+
+
+        for batch in loader:
+            A, B = batch
+            A = A[:-1]
+            # print(len(A))
+            # print(A[0])
+            # print("-----------------------------------")
+            # print(A[1])
+            # print("-----------------------------------")
+            # print(B)
+            encoder_input = A
+            # decoder_input = B[:, :-1]
+            # print(decoder_input)
+            # decoder_target = B[:, 1:]
+            decoder_target = B
+            # Need to pad the decoder input questions, and also the target questions. Just get stuff given to the decoder (B here) in a good form
+            # For decoder input do question except last token, for target to question except first token 
+            model_loss, model_output = self.train_step(encoder_input, decoder_target, loss_object)
+            total_loss += model_loss
+            print(f"Iter: {cnt}   ", model_loss)
+            # print("=====================================================================================================")
+            
+
+            # train_step((encoder_input, decoder_input), decoder_target)
+            # print(cnt)
+            cnt += 1
+
+            if cnt == 2030:
+                with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/12epochs/loss.txt', 'w') as f:
+                    f.write(f"Total Loss: {total_loss}\n")
+                    f.write(f"Average Loss: {total_loss/2030}\n")
+                cnt = 1
+                total_loss = 0
+                tf.keras.backend.clear_session()
+            
+            # print("INPUTS")
+            # print(inputs)
+            # print("TARGET")
+            # print(target)
+            # print("BLEH")
+            # print(bleh)
+            # print("LABEL")
+            # print(label)
+            # print(batch)
+            # print("=====================================================================================================")
+
+            
+            
