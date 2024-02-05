@@ -205,25 +205,34 @@ class Loss():
 #Define Model
 #===========================================================================================================================================================
 class Model_GGNN(Model):
-    def __init__(self, n_layers, units, vocab_input_size, vocab_target_size, optimizer, emb_dimension, embedding_matrix):
+    def __init__(self, n_layers, units, vocab_input_size, vocab_target_size, optimizer, emb_dimension, embedding_matrix, quest_tokenizer):
         super().__init__()
         self.encoder = Encoder_GGNN(n_layers)
         self.max_pool = GlobalMaxPool()
         self.decoder = Decoder(units, emb_dimension, vocab_input_size, vocab_target_size, embedding_matrix)
         self.optimizer = optimizer
+        self.quest_tokenizer = quest_tokenizer
 
     def call(self, encoder_input, decoder_input):
         pass
     
-    def train_step(self, encoder_input, decoder_input, target, loss_object):
+    def train_step(self, encoder_input, target, loss_object):
         with tf.GradientTape() as tape:
             intermediate_representation= self.encoder(encoder_input)
             intermediate_representation = self.max_pool(intermediate_representation)
-            prediction, _ = self.decoder(decoder_input, intermediate_representation)
-            loss = loss_object.loss_function(target, prediction)
+            decoder_input = tf.expand_dims([self.quest_tokenizer.word_index['sostok']], 1)
+            state = intermediate_representation
+            loss = 0
+
+            for i in range(1, len(target[0])):
+                prediction, state = self.decoder(decoder_input, state)
+                loss += loss_object.loss_function(target[:, i], prediction)
+                decoder_input = tf.expand_dims(target[:, i], 1)
+
             variables = self.encoder.trainable_variables + self.decoder.trainable_variables
             gradients = tape.gradient(loss, variables)
             self.optimizer.apply_gradients(zip(gradients, variables))
+            loss = (loss / int(len(target[0])))
             return loss, prediction
     
     def train(self):

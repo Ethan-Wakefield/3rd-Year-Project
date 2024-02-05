@@ -72,7 +72,7 @@ vocab_target_size = len(quest_tokenizer.word_index) + 1
 
 embedding_matrix, embeddings_dictionary = summon_matrix("save", vocab_input_size)
 dataset = My_Dataset(embeddings_dictionary, quest_tokenizer)
-loader = DisjointLoader(dataset, batch_size=1, epochs=1, node_level=False)
+loader = DisjointLoader(dataset, batch_size=1, epochs=6, node_level=False)
 
 print(dataset.n_graphs)
 print(dataset[13].a)
@@ -98,7 +98,7 @@ layers = 3
 
 encoder = Encoder_GGNN(layers)
 optimizer = tf.keras.optimizers.legacy.Adam()
-model = Model_GGNN(layers, units, vocab_input_size, vocab_target_size, optimizer, embedding_dimension, embedding_matrix)
+model = Model_GGNN(layers, units, vocab_input_size, vocab_target_size, optimizer, embedding_dimension, embedding_matrix, quest_tokenizer)
 
 
 #===========================================================================================================================================================
@@ -118,14 +118,16 @@ for batch in loader:
     # print("-----------------------------------")
     # print(B)
     encoder_input = A
-    decoder_input = B[:, :-1]
-    decoder_target = B[:, 1:]
-    print(decoder_target)
+    # decoder_input = B[:, :-1]
+    # print(decoder_input)
+    # decoder_target = B[:, 1:]
+    decoder_target = B
     # Need to pad the decoder input questions, and also the target questions. Just get stuff given to the decoder (B here) in a good form
     # For decoder input do question except last token, for target to question except first token 
-    model_loss, model_output = model.train_step(encoder_input, decoder_input, decoder_target, loss_object)
-    print(model_loss)
-    print("=====================================================================================================")
+    model_loss, model_output = model.train_step(encoder_input, decoder_target, loss_object)
+
+    print(f"Iter: {cnt}   ", model_loss)
+    # print("=====================================================================================================")
     
 
     # train_step((encoder_input, decoder_input), decoder_target)
@@ -142,3 +144,5 @@ for batch in loader:
     # print(label)
     # print(batch)
     # print("=====================================================================================================")
+
+model.save_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/6epochs')
