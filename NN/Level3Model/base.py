@@ -44,8 +44,9 @@ embedding_dimension = 300
 layers = 3
 
 encoder = Encoder_GGNN(layers)
+decoder = Decoder(units, embedding_dimension, vocab_input_size, vocab_target_size, embedding_matrix)
 optimizer = tf.keras.optimizers.legacy.Adam()
-model = Model_GGNN(layers, units, vocab_input_size, vocab_target_size, optimizer, embedding_dimension, embedding_matrix, quest_tokenizer)
+model = Model_GGNN(encoder, decoder, optimizer, quest_tokenizer)
 
 
 #===========================================================================================================================================================
@@ -57,6 +58,6 @@ batch = loader.__next__()
 A, B = batch
 A = A[:-1]
 output = model(A)
-model.load_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/9epochs/9epochs').expect_partial()
+model.load_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/12epochs/12epochs').expect_partial()
 model.train(loader, loss_object)
 model.save_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/12epochs/12epochs')

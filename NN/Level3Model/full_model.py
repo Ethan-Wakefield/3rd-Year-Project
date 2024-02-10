@@ -205,11 +205,11 @@ class Loss():
 #Define Model
 #===========================================================================================================================================================
 class Model_GGNN(Model):
-    def __init__(self, n_layers, units, vocab_input_size, vocab_target_size, optimizer, emb_dimension, embedding_matrix, quest_tokenizer):
+    def __init__(self, encoder, decoder, optimizer, quest_tokenizer):
         super().__init__()
-        self.encoder = Encoder_GGNN(n_layers)
+        self.encoder = encoder
         self.max_pool = GlobalMaxPool()
-        self.decoder = Decoder(units, emb_dimension, vocab_input_size, vocab_target_size, embedding_matrix)
+        self.decoder = decoder
         self.optimizer = optimizer
         self.quest_tokenizer = quest_tokenizer
         self.reverse_target_word_index = quest_tokenizer.index_word
