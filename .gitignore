@@ -27,7 +27,8 @@ sevenenv/
 NN/dataset
 NN/dataset2
 glove/
-graph_600/
+graph_600_3/
+graph_600_2/
 
 # Distribution / packaging
 .Python

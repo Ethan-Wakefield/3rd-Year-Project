@@ -189,7 +189,7 @@ class Decoder(Model):
 #===========================================================================================================================================================
 class Loss():
     def __init__(self):
-        self.loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none')
+        self.loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False, reduction='none')
         self.optimizer = tf.keras.optimizers.legacy.Adam()
 
     def loss_function(self, real, pred):
@@ -293,7 +293,7 @@ class Model_GGNN(Model):
             cnt += 1
 
             if cnt == 2030:
-                with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/12epochs/loss.txt', 'w') as f:
+                with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600_2/21epochs/loss.txt', 'w') as f:
                     f.write(f"Total Loss: {total_loss}\n")
                     f.write(f"Average Loss: {total_loss/2030}\n")
                 cnt = 1

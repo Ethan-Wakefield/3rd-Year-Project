@@ -66,6 +66,8 @@ vocab_target_size = len(quest_tokenizer.word_index) + 1
 embedding_matrix, embeddings_dictionary = summon_matrix("load", vocab_input_size)
 dataset = My_Dataset(embeddings_dictionary, quest_tokenizer)
 
+example_loader = DisjointLoader(dataset, batch_size=1, epochs=1, node_level=False)
+
 indexes = np.random.permutation(len(dataset))
 test_split = int(0.9 * len(dataset))
 index_train, index_test = np.split(indexes, [test_split])

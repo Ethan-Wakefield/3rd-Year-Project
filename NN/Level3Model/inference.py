@@ -15,12 +15,12 @@ from spektral.layers import GCNConv, GlobalSumPool, GatedGraphConv, GlobalMaxPoo
 from spektral.data import Dataset, DisjointLoader
 from keras.models import Model
 from full_model import My_Dataset, Encoder_GGNN, Decoder, Model_GGNN, Loss
-from load_data import train_loader as loader
+from load_data import test_loader as loader
 from load_data import vocab_input_size, vocab_target_size, quest_tokenizer, embedding_matrix
 
 units = 600
 embedding_dimension = 300
-layers = 3
+layers = 2
 
 encoder = Encoder_GGNN(layers)
 decoder = Decoder(units, embedding_dimension, vocab_input_size, vocab_target_size, embedding_matrix)
@@ -31,7 +31,7 @@ batch = loader.__next__()
 A, B = batch
 A = A[:-1]
 output = model(A)
-model.load_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/15epochs/12epochs').expect_partial()
+model.load_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600_2/21epochs/21epochs').expect_partial()
 
 cnt = 0
 for batch in loader:

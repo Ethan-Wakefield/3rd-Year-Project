@@ -41,7 +41,7 @@ from load_data import vocab_input_size, vocab_target_size, quest_tokenizer, embe
 #===========================================================================================================================================================
 units = 600
 embedding_dimension = 300
-layers = 3
+layers = 2
 
 encoder = Encoder_GGNN(layers)
 decoder = Decoder(units, embedding_dimension, vocab_input_size, vocab_target_size, embedding_matrix)
@@ -58,6 +58,6 @@ batch = loader.__next__()
 A, B = batch
 A = A[:-1]
 output = model(A)
-model.load_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/12epochs/12epochs').expect_partial()
+model.load_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600_2/18epochs/18epochs').expect_partial()
 model.train(loader, loss_object)
-model.save_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600/12epochs/12epochs')
+model.save_weights('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600_2/21epochs/21epochs')
