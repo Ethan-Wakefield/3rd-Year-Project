@@ -293,7 +293,7 @@ class Model_GGNN(Model):
             cnt += 1
 
             if cnt == 2030:
-                with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600_2/21epochs/loss.txt', 'w') as f:
+                with open('/Users/ethanwakefield/Documents/3rdYearProject/3rd-Year-Project/NN/Level3Model/graph_600_1/9epochs/loss.txt', 'w') as f:
                     f.write(f"Total Loss: {total_loss}\n")
                     f.write(f"Average Loss: {total_loss/2030}\n")
                 cnt = 1

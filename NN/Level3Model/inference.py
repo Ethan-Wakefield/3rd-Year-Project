@@ -49,5 +49,5 @@ for batch in loader:
     output = model(A)
     print("PREDICTED:::::", output)
     print("=====================================================================================================")
-    if cnt == 50:
+    if cnt == 100:
         break

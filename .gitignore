@@ -29,6 +29,7 @@ NN/dataset2
 glove/
 graph_600_3/
 graph_600_2/
+graph_600_1/
 
 # Distribution / packaging
 .Python
